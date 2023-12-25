@@ -1,4 +1,4 @@
-from lib.py_wb_mqtt import WbMqtt
+from module.py_wb_mqtt import WbMqtt
 
 wb = WbMqtt("wirenboard-a25ndemj.local", 1883)  # server, port
 

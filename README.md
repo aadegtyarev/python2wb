@@ -202,7 +202,7 @@ wb.create_virtual_device(
         },
         {
             "name": "log",
-            "title": "Текстовый контрол",
+            "title": "Text Control",
             "type": "text",
             "default": "",
             "order": 5,

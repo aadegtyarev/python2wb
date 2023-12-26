@@ -47,7 +47,7 @@ wb.create_virtual_device(
         },
         {
             "name": "text-demo",
-            "title": "Текстовый контрол",
+            "title": {"ru": "Текстовый контрол", "en": "Text Control"},
             "type": "text",
             "default": "string",
             "readonly": False,

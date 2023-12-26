@@ -163,7 +163,7 @@ wb.unsubscribe_raw('/wbrules/#')
 # функция задания
 wb.create_virtual_device(
     "my-device", # идентификатор устройства
-    {"ru": "Моё устройство", "en": "My Device"}, # заголовой устройства (title)
+    {"ru": "Моё устройство", "en": "My Device"}, # заголовок устройства (title)
     [
         {
             "name": "temp", # идентификатор контрола в mqtt. Обязательно.     

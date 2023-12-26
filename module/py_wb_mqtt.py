@@ -114,7 +114,7 @@ class WbMqtt:
         Args:
             ontrol_path (string): Путь к контролу в формате 'device/control'
             callback (function): Обработчик события, параметры device_id, control_id, new_value
-            mode (string): Переключатель режимов. value — подписываемся на значения, error — на ошибки
+            mode (string): Переключатель режимов. value — подписываемся на значения, errors — на ошибки
         """
 
         items = control_path.split("/")
@@ -172,6 +172,7 @@ class WbMqtt:
 
         Args:
             control_path (string): Путь к контролу в формате 'device/control'
+            mode (string): Переключатель режимов. value — отписываемся от значений, errors — от ошибок
         """
 
         items = control_path.split("/")

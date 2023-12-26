@@ -37,7 +37,7 @@ class WbMqtt:
 
             print("Disconnected result code %s." % str(rc))
 
-        self.client = mqtt.Client(client_id="py-wb-mqtt", clean_session=True)
+        self.client = mqtt.Client(client_id="python2wb", clean_session=True)
         self.client.on_connect = on_connect
 
         if username != None and password != None:

@@ -58,7 +58,7 @@ wb.create_virtual_device(
 
 # Функция публикации логов в консоль wb-rules
 def log(device_id, control_id, new_value):
-    log_value = "[py-wb-mqtt] Изменён контрол %s, значение: %s" % (control_id, new_value)
+    log_value = "[python2wb] Изменён контрол %s, значение: %s" % (control_id, new_value)
     wb.publish_raw("/wbrules/log/info", log_value, retain=True)
 
 # Функция установки температуры в контроле

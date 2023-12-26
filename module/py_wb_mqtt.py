@@ -37,7 +37,7 @@ class WbMqtt:
 
             print("Disconnected result code %s." % str(rc))
 
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(client_id="py-wb-mqtt", clean_session=True)
         self.client.on_connect = on_connect
 
         if username != None and password != None:
@@ -108,16 +108,21 @@ class WbMqtt:
         except Exception as e:
             raise e
 
-    def subscribe(self, control_path, callback):
+    def _subscribe(self, control_path, callback, mode="value"):
         """Подписка на контролы
 
         Args:
             ontrol_path (string): Путь к контролу в формате 'device/control'
             callback (function): Обработчик события, параметры device_id, control_id, new_value
+            mode (string): Переключатель режимов. value — подписываемся на значения, error — на ошибки
         """
 
         items = control_path.split("/")
-        topic = WB_CONTROLS_PATH % (items[0], items[1])
+
+        if mode == "errors":
+            topic = WB_CONTROLS_PATH % (items[0], items[1]) + "/meta/error"
+        else:
+            topic = WB_CONTROLS_PATH % (items[0], items[1])            
 
         # Декоратор, который преобразует полученные из MQTT данные в понятные
         # абстракции: device_id, control_id, new_value
@@ -141,6 +146,16 @@ class WbMqtt:
 
         self.client.message_callback_add(topic, decorator)
 
+    def subscribe(self, control_path, callback):
+        """Обёртка для _subscribe, подписывается на значение"""
+
+        self._subscribe(control_path, callback, mode="value")
+
+    def subscribe_errors(self, control_patch, callback):
+        """Обёртка для _subscribe, подписывается на ошибки"""
+
+        self._subscribe(control_path, callback, mode="errors")
+
     def subscribe_multi(self, controls_path, callback):
         """Подписка на несколько контролов.
 
@@ -152,7 +167,7 @@ class WbMqtt:
         for control in controls_path:
             self.subscribe(control, callback)
 
-    def unsubscribe(self, control_path):
+    def _unsubscribe(self, control_path, mode="value"):
         """Отписка от контролов
 
         Args:
@@ -160,8 +175,22 @@ class WbMqtt:
         """
 
         items = control_path.split("/")
-        topic = WB_CONTROLS_PATH % (items[0], items[1])
+        if mode == "errors":
+            topic = WB_CONTROLS_PATH % (items[0], items[1]) + "/meta/error"
+        else:
+            topic = WB_CONTROLS_PATH % (items[0], items[1])   
+
         self.client.message_callback_remove(topic)
+
+    def unsubscribe(self, control_path):
+        """Обёртка для _unsubscribe, отписывает от значений"""
+
+        self._unsubscribe(control_path, mode="value")
+
+    def unsubscribe_errors(self, control_path):
+        """Обёртка для _unsubscribe, отписывает от ошибок"""
+
+        self._unsubscribe(control_path, mode="errors")
 
     def subscribe_raw(self, mqtt_topic, callback):
         """Подписка на mqtt-топик.

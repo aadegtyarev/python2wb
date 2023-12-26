@@ -44,9 +44,28 @@ finally:
 ```
 
 ## Разворачивание проекта на контроллере
-Чтобы развернуть проект:
-1. Скопируйте файлы модуля и ваших скриптов на контроллер в удобную папку.
-2. Создайте сервис, который будет запускаться при старте ОС контроллера.
+После написания и отладки проекта на компьютере надо его переместить на контроллер. Допустим, скрипт у нас будет лежать в папке `/mnt/data/bin/py-wb-mqtt/`:
+1. Подключаемся к консоли контроллера по SSH  создам папку `mkdir -p /mnt/data/bin/py-wb-mqtt/`
+2. Копируем в неё наши файлы, например, так: `scp -r ./* root@wirenboard-a25ndemj.local:/mnt/data/bin/py-wb-mqtt`
+3. Снова заходим в консоль контроллера и делаем файл скрипта исполняемым `chmod +x /mnt/data/bin/py-wb-mqtt/script.py`
+4. Далее создаём описание сервиса `nano /etc/systemd/system/py-wb-mqtt.service`, например с таким содержанием:
+```
+[Unit]
+Description=py-wb-mqtt
+After=network.target
+
+[Service]
+ExecStart=python3 /mnt/data/bin/py-wb-mqtt/script.py
+WorkingDirectory=/mnt/data/bin/py-wb-mqtt/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+```
+5. Запускаем сервис и помещаем его в автозапуск `systemctl start py-wb-mqtt ; systemctl enable py-wb-mqtt`
 
 ## Работа с контролами устройств
 Обёртка скрывает от пользователя длинные имена топиков, предоставляя простой индерфейс взаимодействия с контролами устройств, позволяя читать и писать данные используя короткую запись пути `device_id/control_id`:

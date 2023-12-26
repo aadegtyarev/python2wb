@@ -1,4 +1,4 @@
-# py-wb-mqtt
+# python2wb
 ## Описание
 Обёртка для удобной работы с девайсами [Wiren Board](https://wirenboard.com) из Python.
 
@@ -7,7 +7,7 @@
 У Wiren Board есть штатное средство для создания сценариев автоматизации [wb-rules](https://wirenboard.com/wiki/Wb-rules), но у него есть недостатки: нет модулей сообщества под разные задачи, нельзя запустить и отладить скрипты на компьютере. Использование Python позволяет писать скрипты так, как вы привыкли и отлаживать их в привычной IDE: запускаете скрипты локально на комьютере и подключаетесь к контроллеру по MQTT.
 
 Файлы в репозитории:
-- Модуль `module/py_wb_mqtt.py`
+- Модуль `module/python2wb.py`
 - Пример скрипта `script.py`
 
 Делалось «для себя», без гарантий и техподдержки, только для тех, кто понимает, что делает.
@@ -21,7 +21,7 @@
 Минимальный пример скрипта:
 ```python
 # Импорт модуля
-from module.py_wb_mqtt import WbMqtt
+from module.python2wb import WbMqtt
 
 # Создание объекта и передача параметров подключения
 wb = WbMqtt("wirenboard-a25ndemj.local", 1883)  # server, port, username, password
@@ -44,19 +44,18 @@ finally:
 ```
 
 ## Разворачивание проекта на контроллере
-После написания и отладки проекта на компьютере надо его переместить на контроллер. Допустим, скрипт у нас будет лежать в папке `/mnt/data/bin/py-wb-mqtt/`:
-1. Подключаемся к консоли контроллера по SSH  создам папку `mkdir -p /mnt/data/bin/py-wb-mqtt/`
-2. Копируем в неё наши файлы, например, так: `scp -r ./* root@wirenboard-a25ndemj.local:/mnt/data/bin/py-wb-mqtt`
-3. Снова заходим в консоль контроллера и делаем файл скрипта исполняемым `chmod +x /mnt/data/bin/py-wb-mqtt/script.py`
-4. Далее создаём описание сервиса `nano /etc/systemd/system/py-wb-mqtt.service`, например с таким содержанием:
+После написания и отладки проекта на компьютере надо его переместить на контроллер. Допустим, скрипт у нас будет лежать в папке `/mnt/data/bin/python2wb/`:
+1. Копируем на контроллер наши файлы, например, так: `scp -r ./* root@wirenboard-a25ndemj.local:/mnt/data/bin/python2wb`
+2. Снова заходим в консоль контроллера и делаем файл скрипта исполняемым `chmod +x /mnt/data/bin/python2wb/script.py`
+3. Далее создаём описание сервиса `nano /etc/systemd/system/python2wb.service`, например с таким содержанием:
 ```
 [Unit]
-Description=py-wb-mqtt
+Description=python2wb
 After=network.target
 
 [Service]
-ExecStart=python3 /mnt/data/bin/py-wb-mqtt/script.py
-WorkingDirectory=/mnt/data/bin/py-wb-mqtt/
+ExecStart=python3 /mnt/data/bin/python2wb/script.py
+WorkingDirectory=/mnt/data/bin/python2wb/
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
@@ -65,7 +64,7 @@ User=root
 [Install]
 WantedBy=multi-user.target
 ```
-5. Запускаем сервис и помещаем его в автозапуск `systemctl start py-wb-mqtt ; systemctl enable py-wb-mqtt`
+5. Запускаем сервис и помещаем его в автозапуск `systemctl start python2wb ; systemctl enable python2wb`
 
 ## Работа с контролами устройств
 Обёртка скрывает от пользователя длинные имена топиков, предоставляя простой индерфейс взаимодействия с контролами устройств, позволяя читать и писать данные используя короткую запись пути `device_id/control_id`:

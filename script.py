@@ -1,5 +1,5 @@
 # Импорт модуля
-from module.py_wb_mqtt import WbMqtt
+from module.python2wb import WbMqtt
 
 # Создание объекта и передача параметров подключения
 wb = WbMqtt("wirenboard-a25ndemj.local", 1883)  # server, port, username, password

@@ -315,7 +315,7 @@ class WbMqtt:
             else:
                 title = {"en": device_title}
 
-            value = {"driver": "pywbmqtt", "title": title}
+            value = {"driver": "python2wb", "title": title}
 
             self.client.publish(
                 topic, payload=json.dumps(value), qos=self.qos_pub, retain=True

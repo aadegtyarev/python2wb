@@ -59,14 +59,22 @@ wb.create_virtual_device(
 # Функция публикации логов в консоль wb-rules
 def log(device_id, control_id, new_value):
     log_value = "[python2wb] Изменён контрол %s, значение: %s" % (control_id, new_value)
+    
+    # Публикуем лог прямо в MQTT-топик
     wb.publish_raw("/wbrules/log/info", log_value, retain=True)
 
 # Функция установки температуры в контроле
 def set_temp(device_id, control_id, new_value):
     wb.set("my-device/temp", new_value)
 
+# Подписка на один контрол
 wb.subscribe("my-device/set_temp", set_temp)
+
+# Подписка на все контролы устройства my-device
 wb.subscribe("my-device/+", log)
+
+# Подписка на список контролов
+wb.subscribe(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"], log)
 
 try:
     # Зацикливание скрипта, чтобы он не завершался

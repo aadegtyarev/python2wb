@@ -52,11 +52,11 @@ class WbMqtt:
             control_path (string): Путь к контролу в формате 'device/control'
 
         Returns:
-            float, int, str, bool: Значение контрола, храняшее в словаре контролов self.controls.
+            float, int, str: Значение контрола, храняшее в словаре контролов self.controls.
             # Преобразуется из строки в нужный тип.
         """
 
-        return self.controls.get(control_path)
+        return self.parse_value(self.controls.get(control_path))
 
     def set(self, control_path, value):
         """Запись значения в контрол.

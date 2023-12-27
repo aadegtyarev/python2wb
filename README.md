@@ -79,7 +79,7 @@ print(wb.get("wb-mr6c_226/K1"))
 ## Подписка на контролы
 Кроме этого можно подписаться на один или несколько контролов, в том числе с использованием символа подстановки `+`. Обработка события происходит в функции обратного вызова, которую нужно задать. Функция возвращает:
 - `device_id` — идентификатор устройства;
-- `control_id` — идентификатор контрола;
+- `control_id` — идентификатор контрола `wb-gpio/A1_OUT` или список контролов `["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"]`;
 - `new_value` — новое значение контрола, преобразованное к одному из типов (`float`, `int`, `str`).
 
 К одной функции можно привязать несколько подписок:
@@ -95,12 +95,16 @@ wb.subscribe('wb-gpio/+', log)
 wb.subscribe("wb-mr6c_226/K1", log)
 
 # Подписка на несколько контролов
-wb.subscribe_multi(['wb-mr6c_226/K1', 'wb-mr6c_226/K6'], log)
+wb.subscribe(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"], log)
 ```
 
 Также можнго отписаться от контрола, если это нужно: 
 ```python
+# Отписаться от одного контрола
 wb.unsubscribe("wb-mr6c_226/K1")
+
+# Отписаться от нескольких контролов
+wb.unsubscribe(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"])
 ```
 
 ## Подписка на ошибки
@@ -121,14 +125,29 @@ def log_errors(device_id, control_id, error_value):
 # Подписка на ошибки контрола wb-mr6c_226/K1
 wb.subscribe_errors("wb-mr6c_226/K1", log_errors)
 
-# Описка от ошибок контрола wb-mr6c_226/K1
-wb.unsubscribe_errors("wb-mr6c_226/K1")
-
 ```
 Можно использовать символ подстановки  `+`, например:
 ```python
 # Подписка на все ошибки модуля wb-mr6c_226
 wb.subscribe_errors("wb-mr6c_226/+", log_errors)
+```
+
+Также можно подписаться на ошибки нескольких контролов через список:
+```python
+# Подписка на ошибки нескольких контролов
+wb.subscribe_errors(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"], log_errors)
+```
+
+Отписаться от одного или нескольких контролов:
+```python
+# Описка от ошибок контрола wb-mr6c_226/K1
+wb.unsubscribe_errors("wb-mr6c_226/K1")
+
+# Описка от ошибок контролов с символом подстановки
+wb.unsubscribe_errors("wb-mr6c_226/+")
+
+# Отписка от ошибок нескольких контролов
+wb.unsubscribe_errors(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"])
 ```
 
 ## Подписка на произвольные MQTT-топики
@@ -202,7 +221,7 @@ wb.create_virtual_device(
         },
         {
             "name": "log",
-            "title": "Text Control",
+            "title": "Text Control", # можно и одну строчку для всех языков
             "type": "text",
             "default": "",
             "order": 5,

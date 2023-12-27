@@ -20,6 +20,7 @@ class WbMqtt:
         qos_pub=1,
         qos_sub=0,
         base_subscribe_topic="#",
+        client_id = "python2wb"
     ):
         self.qos_pub = qos_pub
 
@@ -37,7 +38,7 @@ class WbMqtt:
 
             print("Disconnected result code %s." % str(rc))
 
-        self.client = mqtt.Client(client_id="python2wb", clean_session=True)
+        self.client = mqtt.Client(client_id=client_id)
         self.client.on_connect = on_connect
 
         if username != None and password != None:
@@ -149,23 +150,20 @@ class WbMqtt:
     def subscribe(self, control_path, callback):
         """Обёртка для _subscribe, подписывается на значение"""
 
-        self._subscribe(control_path, callback, mode="value")
+        if (type(control_path) == list):
+            for control in control_path:
+                self._subscribe(control, callback, mode="value")
+        else:
+            self._subscribe(control_path, callback, mode="value")
 
     def subscribe_errors(self, control_patch, callback):
         """Обёртка для _subscribe, подписывается на ошибки"""
 
-        self._subscribe(control_path, callback, mode="errors")
-
-    def subscribe_multi(self, controls_path, callback):
-        """Подписка на несколько контролов.
-
-        Args:
-            controls_path (_type_): массив строк control_path, например ['device1/control2', 'device5/control12']
-            callback (function): Обработчик события, параметры device_id, control_id, new_value
-        """
-
-        for control in controls_path:
-            self.subscribe(control, callback)
+        if (type(control_path) == list):
+            for control in control_path:
+                self._subscribe(control, callback, mode="errors")
+        else:
+            self._subscribe(control_path, callback, mode="errors")
 
     def _unsubscribe(self, control_path, mode="value"):
         """Отписка от контролов
@@ -186,12 +184,20 @@ class WbMqtt:
     def unsubscribe(self, control_path):
         """Обёртка для _unsubscribe, отписывает от значений"""
 
-        self._unsubscribe(control_path, mode="value")
+        if (type(control_path) == list):
+            for control in control_path:
+                self._unsubscribe(control, mode="value")
+        else:
+            self._unsubscribe(control_path, mode="value")
 
     def unsubscribe_errors(self, control_path):
         """Обёртка для _unsubscribe, отписывает от ошибок"""
 
-        self._unsubscribe(control_path, mode="errors")
+        if (type(control_path) == list):
+            for control in control_path:
+                self._unsubscribe(control, mode="errors")
+        else:
+            self._unsubscribe(control_path, mode="errors")
 
     def subscribe_raw(self, mqtt_topic, callback):
         """Подписка на mqtt-топик.
@@ -247,7 +253,6 @@ class WbMqtt:
         """Очистка виртуальных устройств, подписок и отключение клиента от брокера"""
 
         self.remove_all_virtual_devices()
-        self.unsubscribe_all()
         self.client.disconnect()
 
     def _watch_control(self, client, userdata, msg):
@@ -264,9 +269,8 @@ class WbMqtt:
         items = msg.topic.split("/")
         control_path = "%s/%s" % (items[2], items[4])
         new_value = msg.payload.decode()
-        self.write_value_in_dic(control_path, new_value)
 
-        # print("_watch_control: %s | %s. controls.get: %s" % (control_path, msg.payload.decode(), self.controls.get(control_path)) )
+        self.write_value_in_dic(control_path, new_value)
 
     def _watch_virtual_control(self, client, userdata, msg):
         """Внутреннее. Слежение за контролами виртуальных устройств, созданных этим скриптом.
@@ -433,12 +437,6 @@ class WbMqtt:
 
         for key in self.virtual_devices:
             self.remove_virtual_device(key)
-
-    def unsubscribe_all(self):
-        """Отписаться от всех контролов"""
-
-        for control in self.controls:
-            self.unsubscribe(control)
 
     def parse_value(self, value):
         """В MQTT все значения текстовые, но чтобы было удобно работать

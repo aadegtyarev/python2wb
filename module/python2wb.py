@@ -10,6 +10,7 @@ class WbMqtt:
     client = None
     virtual_devices = []
     qos_pub = 0
+    driver_name = ""
 
     def __init__(
         self,
@@ -20,9 +21,11 @@ class WbMqtt:
         qos_pub=1,
         qos_sub=0,
         base_subscribe_topic="#",
-        client_id = "python2wb"
+        client_id=None,
+        driver_name="python2wb",
     ):
         self.qos_pub = qos_pub
+        self.driver_name = driver_name
 
         def on_connect(client, userdata, flags, rc):
             """Событие, которое возникает после подключения к брокеру"""
@@ -123,7 +126,7 @@ class WbMqtt:
         if mode == "errors":
             topic = WB_CONTROLS_PATH % (items[0], items[1]) + "/meta/error"
         else:
-            topic = WB_CONTROLS_PATH % (items[0], items[1])            
+            topic = WB_CONTROLS_PATH % (items[0], items[1])
 
         # Декоратор, который преобразует полученные из MQTT данные в понятные
         # абстракции: device_id, control_id, new_value
@@ -150,7 +153,7 @@ class WbMqtt:
     def subscribe(self, control_path, callback):
         """Обёртка для _subscribe, подписывается на значение"""
 
-        if (type(control_path) == list):
+        if type(control_path) == list:
             for control in control_path:
                 self._subscribe(control, callback, mode="value")
         else:
@@ -159,7 +162,7 @@ class WbMqtt:
     def subscribe_errors(self, control_patch, callback):
         """Обёртка для _subscribe, подписывается на ошибки"""
 
-        if (type(control_path) == list):
+        if type(control_path) == list:
             for control in control_path:
                 self._subscribe(control, callback, mode="errors")
         else:
@@ -177,14 +180,14 @@ class WbMqtt:
         if mode == "errors":
             topic = WB_CONTROLS_PATH % (items[0], items[1]) + "/meta/error"
         else:
-            topic = WB_CONTROLS_PATH % (items[0], items[1])   
+            topic = WB_CONTROLS_PATH % (items[0], items[1])
 
         self.client.message_callback_remove(topic)
 
     def unsubscribe(self, control_path):
         """Обёртка для _unsubscribe, отписывает от значений"""
 
-        if (type(control_path) == list):
+        if type(control_path) == list:
             for control in control_path:
                 self._unsubscribe(control, mode="value")
         else:
@@ -193,7 +196,7 @@ class WbMqtt:
     def unsubscribe_errors(self, control_path):
         """Обёртка для _unsubscribe, отписывает от ошибок"""
 
-        if (type(control_path) == list):
+        if type(control_path) == list:
             for control in control_path:
                 self._unsubscribe(control, mode="errors")
         else:
@@ -319,7 +322,7 @@ class WbMqtt:
             else:
                 title = {"en": device_title}
 
-            value = {"driver": "python2wb", "title": title}
+            value = {"driver": self.driver_name, "title": title}
 
             self.client.publish(
                 topic, payload=json.dumps(value), qos=self.qos_pub, retain=True
@@ -350,7 +353,7 @@ class WbMqtt:
             topic = WB_CONTROLS_PATH % (device_id, control.get("name"))
 
             title = control.get("title")
-            print(control)
+
             if type(title) != dict:
                 control["title"] = {"en": title}
 
@@ -463,3 +466,4 @@ class WbMqtt:
 @atexit.register
 def goodbye():
     print("The script has finished.")
+

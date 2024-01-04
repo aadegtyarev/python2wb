@@ -125,6 +125,8 @@ class WbMqtt:
 
         if mode == "errors":
             topic = WB_CONTROLS_PATH % (items[0], items[1]) + "/meta/error"
+        elif mode == "on":
+            topic = WB_CONTROLS_PATH % (items[0], items[1]) + "/on"
         else:
             topic = WB_CONTROLS_PATH % (items[0], items[1])
 
@@ -159,7 +161,16 @@ class WbMqtt:
         else:
             self._subscribe(control_path, callback, mode="value")
 
-    def subscribe_errors(self, control_patch, callback):
+    def subscribe_on(self, control_path, callback):
+        """Обёртка для _subscribe, подписывается на командный топик /on"""
+
+        if type(control_path) == list:
+            for control in control_path:
+                self._subscribe(control, callback, mode="on")
+        else:
+            self._subscribe(control_path, callback, mode="on")
+
+    def subscribe_errors(self, control_path, callback):
         """Обёртка для _subscribe, подписывается на ошибки"""
 
         if type(control_path) == list:
@@ -379,8 +390,8 @@ class WbMqtt:
                 "%s/on" % topic, self._watch_virtual_control
             )
 
-            control_patch = "%s/%s" % (device_id, control.get("name"))
-            self.controls.update({control_patch: control.get("default")})
+            control_path = "%s/%s" % (device_id, control.get("name"))
+            self.controls.update({control_path: control.get("default")})
 
             return "%s/%s" % (device_id, control.get("name"))
         else:
@@ -416,6 +427,11 @@ class WbMqtt:
         self.client.publish("/devices/%s" % (device_id), "", qos=self.qos_pub)
         index = self.virtual_devices.index(device_id)
         self.virtual_devices.pop(index)
+
+    def add_control(self, device_id, control):
+        """Обёртка для _add_control"""
+
+        self._add_control(device_id, control)
 
     def remove_virtual_device(self, device_id):
         """Удалить виртуальное устройство
@@ -466,4 +482,3 @@ class WbMqtt:
 @atexit.register
 def goodbye():
     print("The script has finished.")
-

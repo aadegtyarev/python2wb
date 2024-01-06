@@ -1,51 +1,51 @@
 # python2wb
-## Описание
-Обёртка для paho-mqtt с помощью которой можно работать с MQTT [Wiren Board](https://wirenboard.com) из Python.
+## Description
+A wrapper for paho-mqtt with which you can work with MQTT [Wiren Board](https://wirenboard.com) from Python.
 
-В контроллере Wiren Board обмен информацией идёт через MQTT-брокер, где согласно конвенции создаются устройства. У Wiren Board есть штатное средство для создания сценариев автоматизации [wb-rules](https://wirenboard.com/wiki/Wb-rules), но у него есть недостатки: нет модулей сообщества под разные задачи, нельзя запустить и отладить скрипты на компьютере. Использование Python позволяет писать скрипты так, как вы привыкли и отлаживать их в привычной IDE: запускаете скрипты локально на комьютере и подключаетесь к контроллеру по MQTT.
+In the Wiren Board controller, information is exchanged through an MQTT broker, where devices are created according to the convention. Wiren Board has a standard tool for creating automation scripts [wb-rules](https://wirenboard.com/wiki/Wb-rules), but it has disadvantages: there are no community modules for different tasks, you cannot run and debug scripts on computer. Using Python allows you to write scripts the way you are used to and debug them in a familiar IDE: run the scripts locally on your computer and connect to the controller via MQTT.
 
-Файлы в репозитории:
-- Модуль `module/python2wb.py`
-- Пример скрипта `script.py`
+Files in the repository:
+- Module source code in the `src` folder
+- Examples in the `examples` folder
 
-Делалось «для себя», без гарантий и техподдержки, только для тех, кто понимает, что делает.
+It was done “for oneself”, without guarantees and technical support, only for those who understand what they are doing.
 
-## Начало работы
-Чтобы начать работу:
-1. клонируйте репозиторий;
-2. создайте рядом с папкой `module` скрипт;
-3. подключите модуль к своему скрипту, создайте объект и укажите параметры подключения к MQTT-брокеру. 
+## Install
+Install the module and dependencies using pip: `pip install paho-mqtt python2wb`.
 
-Минимальный пример скрипта:
+## Starting work
+Connect the module to your script, create an object and specify the parameters for connecting to the MQTT broker. Minimal script example:
+
 ```python
-# Импорт модуля
-from module.python2wb import WbMqtt
+# Import module
+from python2wb.mqtt import WbMqtt
 
-# Создание объекта и передача параметров подключения
+# Creating an object and passing connection parameters
 wb = WbMqtt("wirenboard-a25ndemj.local", 1883)  # server, port, username, password
 
-# Объявление функции для обработки подписки
+# Declaring a function to handle subscriptions
 def log(device_id, control_id, new_value):
     print("log: %s %s %s" % (device_id, control_id, new_value))
 
-# Подписка на все топики устройства system
+# Subscription to all system device topics
 wb.subscribe('system/+', log)
-# Подписка на значение LVA15 устройства metrics
+# Subscribe to LVA15 value of device metrics
 wb.subscribe('metrics/load_average_15min', log)
 
 try:
-    # Зацикливание скрипта, чтобы он не завершался
+    # Looping a script so it doesn't terminate
     wb.loop_forever()
 finally:
-    # Очистка винтуальных устройств и подписок перед выходом
+    # Cleaning virtual devices and subscriptions before exiting
     wb.clear()
 ```
 
-## Разворачивание проекта на контроллере
-После написания и отладки проекта на компьютере надо его переместить на контроллер. Допустим, скрипт у нас будет лежать в папке `/mnt/data/bin/python2wb/`:
-1. Копируем на контроллер наши файлы, например, так: `scp -r ./* root@wirenboard-a25ndemj.local:/mnt/data/bin/python2wb`
-2. Снова заходим в консоль контроллера и делаем файл скрипта исполняемым `chmod +x /mnt/data/bin/python2wb/script.py`
-3. Далее создаём описание сервиса `nano /etc/systemd/system/python2wb.service`, например с таким содержанием:
+## Deploying the project to the controller
+After writing and debugging the project on the computer, you need to move it to the controller. Let's say the script will be in the folder `/mnt/data/bin/python2wb/`:
+1. Copy our files to the controller, for example, like this: `scp -r ./* root@wirenboard-a25ndemj.local:/mnt/data/bin/python2wb`
+2. Go to the controller console again and make the script file executable `chmod +x /mnt/data/bin/python2wb/script.py`
+3. Next, create a description of the service `nano /etc/systemd/system/python2wb.service`, for example with the following content:
+
 ```
 [Unit]
 Description=python2wb
@@ -62,152 +62,152 @@ User=root
 [Install]
 WantedBy=multi-user.target
 ```
-5. Запускаем сервис и помещаем его в автозапуск `systemctl start python2wb ; systemctl enable python2wb`
+5. Start the service and place it in autostart `systemctl start python2wb ; systemctl enable python2wb`
 
-## Работа с контролами устройств
-Обёртка скрывает от пользователя длинные имена топиков, предоставляя простой индерфейс взаимодействия с контролами устройств, позволяя читать и писать данные используя короткую запись пути `device_id/control_id`:
+## Working with device controls
+The wrapper hides long topic names from the user, providing a simple interface for interacting with device controls, allowing you to read and write data using a short path notation `device_id/control_id`:
 ```python
-# Запись значения в контрол устройства
+# Write value to device control
 wb.set("wb-mr6c_226/K1", new_value)
 
-# Чтение значения из контрола
+# Read value from control
 print(wb.get("wb-mr6c_226/K1"))
 ```
 
-## Подписка на контролы
-Кроме этого можно подписаться на один или несколько контролов, в том числе с использованием символа подстановки `+`. Обработка события происходит в функции обратного вызова, которую нужно задать. Функция возвращает:
-- `device_id` — идентификатор устройства;
-- `control_id` — идентификатор контрола `wb-gpio/A1_OUT` или список контролов `["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"]`;
-- `new_value` — новое значение контрола, преобразованное к одному из типов (`float`, `int`, `str`).
+## Subscription to controls
+In addition, you can subscribe to one or more controls, including using the `+` wildcard character. Event processing occurs in the callback function that needs to be specified. The function returns:
+- `device_id` — device identifier;
+- `control_id` — control identifier `wb-gpio/A1_OUT` or list of controls `["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"]`;
+- `new_value` — new value of the control, converted to one of the types (`float`, `int`, `str`).
 
-К одной функции можно привязать несколько подписок:
+You can bind multiple subscriptions to one function:
 ```python
-# Функция обратного вызова
+# Callback function
 def log(device_id, control_id, new_value):
-    print("log: %s %s %s" % (device_id, control_id, new_value))
+print("log: %s %s %s" % (device_id, control_id, new_value))
 
-# Подписка с использованием символов подстановки
+# Subscribe using wildcards
 wb.subscribe('wb-gpio/+', log)
 
-# Подписка на один контрол
+# Subscribe to one control
 wb.subscribe("wb-mr6c_226/K1", log)
 
-# Подписка на несколько контролов
+# Subscribe to several controls
 wb.subscribe(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"], log)
 ```
 
-Также можнго отписаться от контрола, если это нужно: 
+You can also unsubscribe from the control if necessary:
 ```python
-# Отписаться от одного контрола
+# Unsubscribe from one control
 wb.unsubscribe("wb-mr6c_226/K1")
 
-# Отписаться от нескольких контролов
+# Unsubscribe from several controls
 wb.unsubscribe(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"])
 ```
 
-## Подписка на ошибки
-При работе с устройствами через драйвер wb-mqtt-serial можно получать ошибки обмена, которые публикуются драйвером в MQTT:
-- r — ошибка чтения из устройства;
-- w — ошибка записи в устройство;
-- p — драйвер не смог выдержать заданные период опроса.
+## Subscribe to errors
+When working with devices through the wb-mqtt-serial driver, you can receive exchange errors that are published by the driver in MQTT:
+- r — error reading from device;
+- w — error writing to the device;
+- p — the driver could not maintain the specified polling period.
 
-В одном сообщении может быть несколько ошибок, например `rwp` или `rp`.
+There can be several errors in one message, for example `rwp` or `rp`.
 
-Подписаться на ошибки определённого контрола:
+Subscribe to errors of a specific control:
 ```python
 
-# Функция обратного вызова
+# Callback function
 def log_errors(device_id, control_id, error_value):
-    print("log_errors: %s %s %s" % (device_id, control_id, error_value))
+print("log_errors: %s %s %s" % (device_id, control_id, error_value))
 
-# Подписка на ошибки контрола wb-mr6c_226/K1
+# Subscribe to control errors wb-mr6c_226/K1
 wb.subscribe_errors("wb-mr6c_226/K1", log_errors)
 
 ```
-Можно использовать символ подстановки  `+`, например:
+You can use the `+` wildcard, for example:
 ```python
-# Подписка на все ошибки модуля wb-mr6c_226
+# Subscribe to all errors of the wb-mr6c_226 module
 wb.subscribe_errors("wb-mr6c_226/+", log_errors)
 ```
 
-Также можно подписаться на ошибки нескольких контролов через список:
+You can also subscribe to errors from several controls through the list:
 ```python
-# Подписка на ошибки нескольких контролов
+# Subscribe to errors of several controls
 wb.subscribe_errors(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"], log_errors)
 ```
 
-Отписаться от одного или нескольких контролов:
+Unsubscribe from one or more controls:
 ```python
-# Описка от ошибок контрола wb-mr6c_226/K1
+# Note from control errors wb-mr6c_226/K1
 wb.unsubscribe_errors("wb-mr6c_226/K1")
 
-# Описка от ошибок контролов с символом подстановки
+# Note about control errors with wildcard character
 wb.unsubscribe_errors("wb-mr6c_226/+")
 
-# Отписка от ошибок нескольких контролов
+# Unsubscribe from errors of several controls
 wb.unsubscribe_errors(["wb-gpio/A1_OUT", "wb-gpio/A2_OUT"])
 ```
 
-## Подписка на командный топик /on
-Если вы используете модуль в конвернете, полезно будет подписаться на командный топик, чтобы обрабатывать действия в веб-интерфейсе или стороннем софте. Можно использовать символ подстановки `+`.
+## Subscribe to team topic /on
+If you use a module in a converter, it will be useful to subscribe to a command topic in order to process actions in the web interface or third-party software. You can use the `+` wildcard character.
 
 ```python
 
-# Функция обратного вызова
+# Callback function
 def log_on(device_id, control_id, error_value):
-    print("log_on: %s %s %s" % (device_id, control_id, error_value))
+print("log_on: %s %s %s" % (device_id, control_id, error_value))
 
-# Подписка на командный топик контрола wb-mr6c_226/K1
+# Subscribe to the command control topic wb-mr6c_226/K1
 wb.subscribe_on("wb-mr6c_226/K1", log_on)
 
 ```
 
-## Подписка на произвольные MQTT-топики
-Иногда нужно работать с топиками сторонних устройств, которые ничего не знают про конвенцию Wiren Board. Для этого есть функции подписки, отписки и публикации с указанием полного имени топика. Обработка события происходит в функции обратного вызова, которую нужно задать. Функция возвращает два параметра:
-- `mqtt_topic` — полный путь к топику;
-- `new_value` — новое значение типа str.
+## Subscription to arbitrary MQTT topics
+Sometimes you need to work with topics from third-party devices that do not know anything about the Wiren Board convention. For this purpose, there are functions for subscribing, unsubscribing and publishing with the full name of the topic. Event processing occurs in the callback function that needs to be specified. The function returns two parameters:
+- `mqtt_topic` — full path to the topic;
+- `new_value` — new value of type str.
 
-При подписке можно использовать символы подстановки `+` — подписаться на один уровень и `#` — подписаться на все уровни ниже.
+When subscribing, you can use wildcard characters `+` - subscribe to one level and `#` - subscribe to all levels below.
 
-Пример:
+Example:
 ```python
-# Функция обратного вызова
+# Callback function
 def log_raw(mqtt_topic, new_value):
-    print("log_raw: %s %s" % (mqtt_topic, new_value))
+print("log_raw: %s %s" % (mqtt_topic, new_value))
 
-# Подписка на топик
+# Subscribe to topic
 wb.subscribe_raw('/wbrules/#', log_raw)
 
-# Публикация нового значения в топик
+# Publish a new value to a topic
 wb.publish_raw('/wbrules/log/info', 'New Log Value')
 
-# Отписка от топика
+# Unsubscribe from topic
 wb.unsubscribe_raw('/wbrules/#')
-
 ```
 
-## Виртуальные устройства
+## Virtual devices
 
-Также можно создавать виртуальные устройства с произвольным количеством контролов и использовать их для взаимодействия с пользователем или хранения данных:
+You can also create virtual devices with an arbitrary number of controls and use them to interact with the user or store data:
+
 ```python
-# функция задания
+# Description of the virtual device
 wb.create_virtual_device(
-    "my-device", # идентификатор устройства
-    {"ru": "Моё устройство", "en": "My Device"}, # заголовок устройства (title)
+    "my-device", # device id
+    {"ru": "Моё устройство", "en": "My Device"}, # device title
     [
         {
-            "name": "temp", # идентификатор контрола в mqtt. Обязательно.     
-            "title": {"ru": "Температура", "en": "Temperature"}, # заголовок контрола (title). Обязательно.
-            "type": "value", # тип контрола. Обязательно.
-            "default": 50, # значение по умолчанию
-            "order": 1, # порядковый номер для сортировки
-            "units": "°C" # единица измерения          
+            "name": "temp", # control identifier in mqtt. Required.     
+            "title": {"ru": "Температура", "en": "Temperature"}, # control title. Required.
+            "type": "value", # control type. Required.
+            "default": 50, # default value
+            "order": 1, # number fo sorting
+            "units": "°C" # unit         
         },
         {
             "name": "set_temp",
             "title": {"ru": "Уставка", "en": "Set Temperature"},
             "type": "value",
-            "readonly": False, # запрещает редактировать контрол. По умолчанию True.
+            "readonly": False, # prohibits editing the control. Default True.
             "default": 12.5,
             "order": 2,
             "units": "°C",
@@ -233,7 +233,7 @@ wb.create_virtual_device(
         },
         {
             "name": "log",
-            "title": "Text Control", # можно и одну строчку для всех языков
+            "title": "Text Control", # you can have one line for all languages
             "type": "text",
             "default": "",
             "order": 5,
@@ -241,58 +241,58 @@ wb.create_virtual_device(
     ],
 )
 ```
-Заголовок (title) устройства и контролов можно указывать строкой `"My Device Title"` или словарём с указанием языков `{"ru": "Переключатель", "en": "Switch 1"}`.
+The title of the device and controls can be specified using the line `"My Device Title"` or a dictionary indicating the languages ​​`{"ru": "Switch", "en": "Switch 1"}`.
 
-Контролы передаются массивом словарей. Описание контролов соответствует текущей [конвенции Wiren Board](https://github.com/wirenboard/conventions), за исключением `default` для `switch`, в модуле надо использовать значения `0` и `1`.
+Controls are passed by an array of dictionaries. The description of the controls corresponds to the current [Wiren Board convention](https://github.com/wirenboard/conventions), with the exception of `default` for `switch`, the values ​​`0` and `1` should be used in the module.
 
-Список типов и доступные параметры для каждого типа:
-| type       | Возможные значения               | default | order | units | min/max | readonly |
+List of types and available options for each type:
+| type       | Possible values                  | default | order | units | min/max | readonly |
 |------------|----------------------------------|---------|-------|-------|---------|----------|
-| value      | любые числа: int, float          | +       |+      |+      |+        |+         |
-| range      | любые числа: int, float          | +       |+      |+      |+        |+         |
-| rgb        | формат "R;G;B", каждое 0...255   | +       |+      |+      |         |+         |
-| text       | текст                            | +       |+      |+      |         |+         |
-| alarm      | текст                            | +       |+      |       |         |          |
-| switch     | 0 или 1                          | +       |+      |       |         |+         |
+| value      | any numbers: int, float          | +       |+      |+      |+        |+         |
+| range      | any numbers: int, float          | +       |+      |+      |+        |+         |
+| rgb        | format "R;G;B", each 0...255     | +       |+      |+      |         |+         |
+| text       | text                             | +       |+      |+      |         |+         |
+| alarm      | text                             | +       |+      |       |         |          |
+| switch     | 0 or 1                           | +       |+      |       |         |+         |
 | pushbutton | 1                                | +       |+      |       |         |          |
 
-Список доступных `units`:
-| Значение  | Описание, EN |
-|---        |---          |
-| mm/h      | mm per hour, precipitation rate (rainfall rate) |
-| m/s       | meter per second, speed |
-| W         | watt, power |
-| kWh       | kilowatt hour, power consumption |
-| V         | voltage |
-| mV        | voltage (millivolts) |
-| m^3/h     | cubic meters per hour, flow |
-| m^3       | cubic meters, volume |
-| Gcal/h    | giga calories per hour, heat power |
-| cal       | calories, energy |
-| Gcal      | giga calories, energy |
-| Ohm       | resistance |
-| mOhm      | resistance (milliohms) |
-| bar       | pressure |
-| mbar      | pressure (100Pa) |
-| s         | second |
-| min       | minute |
-| h         | hour |
-| m         | meter |
-| g         | gram |
-| kg        | kilo gram |
-| mol       | mole, amount of substance |
-| cd        | candela, luminous intensity |
-| %, RH     | relative humidity |
-| deg C     | temperature |
-| %         | percent |
-| ppm       | parts per million |
-| ppb       | parts per billion |
-| A         | ampere, current |
-| mA        | milliampere, current |
-| deg       | degree, angle |
-| rad       | radian, angle |
+List of available `units`:
+| Value     | Description, EN                                   |
+|---        |---                                                |
+| mm/h      | mm per hour, precipitation rate (rainfall rate)   |
+| m/s       | meter per second, speed                           |
+| W         | watt, power                                       |
+| kWh       | kilowatt hour, power consumption                  |
+| V         | voltage                                           |
+| mV        | voltage (millivolts)                              |
+| m^3/h     | cubic meters per hour, flow                       |
+| m^3       | cubic meters, volume                              |
+| Gcal/h    | giga calories per hour, heat power                |
+| cal       | calories, energy                                  |
+| Gcal      | giga calories, energy                             |
+| Ohm       | resistance                                        |
+| mOhm      | resistance (milliohms)                            |
+| bar       | pressure                                          |
+| mbar      | pressure (100Pa)                                  |
+| s         | second                                            |
+| min       | minute                                            |
+| h         | hour                                              |
+| m         | meter                                             |
+| g         | gram                                              |
+| kg        | kilo gram                                         |
+| mol       | mole, amount of substance                         |
+| cd        | candela, luminous intensity                       |
+| %, RH     | relative humidity                                 |
+| deg C     | temperature                                       |
+| %         | percent                                           |
+| ppm       | parts per million                                 |
+| ppb       | parts per billion                                 |
+| A         | ampere, current                                   |
+| mA        | milliampere, current                              |
+| deg       | degree, angle                                     |
+| rad       | radian, angle                                     |
 
-## Известные проблемы
-Не всегда удаляются созданные виртуальные устройства. Возможно, скрипт завершается раньше, чем успевают отработать процедуры удаления.
+## Known issues
+Created virtual devices are not always deleted. It is possible that the script ends before the deletion procedures are completed.
 
-При установке надо создать описание спрвиса для автозапуска, поэтому обновлять софт контроллера надо строго через apt. При обновлении с флешки или в веб-интерфейсе описание сервиса будет удалено. Как костыль, можно на wb-rules написать скрипт, который будет запускать скрипт на питоне :D
+During installation, you need to create a description of the system for autorun, so you must update the controller software strictly via apt. When updating from a flash drive or in the web interface, the service description will be deleted. As a crutch, you can write a script on wb-rules that will run the script in Python :D

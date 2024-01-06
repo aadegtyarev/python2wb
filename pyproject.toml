@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "python2wb"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["Alexander Degtyarev <adegtyarev.ap@gmail.com>"]
 description = "Module for Python integration with Wiren Board MQTT"
 readme = "README.md"
-packages = [{include = "src/python2wb"}]
+keywords = ["mqtt", "wirenboard"]
+packages = [{include = "python2wb"}]
 repository = "https://github.com/aadegtyarev/python2wb"
 classifiers = [
     "Programming Language :: Python :: 3",

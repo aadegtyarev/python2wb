@@ -1,0 +1,26 @@
+[project]
+name = "python2wb"
+version = "0.1.5"
+authors = [
+  { name="Alexander Degtyarev", email="adegtyarev.ap@gmail.com" },
+]
+description = "Module for Python integration with Wiren Board MQTT"
+readme = "README.md"
+requires-python = ">=3.8"
+requires-dist= "paho-mqtt"
+dependencies = [
+  'paho-mqtt >= 1.6.1',
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/aadegtyarev/python2wb"
+Issues = "https://github.com/aadegtyarev/python2wb/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

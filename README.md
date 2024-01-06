@@ -5,7 +5,7 @@ A wrapper for paho-mqtt with which you can work with MQTT [Wiren Board](https://
 In the Wiren Board controller, information is exchanged through an MQTT broker, where devices are created according to the convention. Wiren Board has a standard tool for creating automation scripts [wb-rules](https://wirenboard.com/wiki/Wb-rules), but it has disadvantages: there are no community modules for different tasks, you cannot run and debug scripts on computer. Using Python allows you to write scripts the way you are used to and debug them in a familiar IDE: run the scripts locally on your computer and connect to the controller via MQTT.
 
 Files in the repository:
-- Module source code in the `src` folder
+- Module source code in the `python2wb` folder
 - Examples in the `examples` folder
 
 It was done “for oneself”, without guarantees and technical support, only for those who understand what they are doing.

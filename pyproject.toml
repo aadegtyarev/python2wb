@@ -1,26 +1,21 @@
-[project]
+[tool.poetry]
 name = "python2wb"
-version = "0.1.5"
-authors = [
-  { name="Alexander Degtyarev", email="adegtyarev.ap@gmail.com" },
-]
+version = "0.1.6"
+authors = ["Alexander Degtyarev <adegtyarev.ap@gmail.com>"]
 description = "Module for Python integration with Wiren Board MQTT"
 readme = "README.md"
-requires-python = ">=3.8"
-requires-dist= "paho-mqtt"
-dependencies = [
-  'paho-mqtt >= 1.6.1',
-]
+packages = [{include = "src/python2wb"}]
+repository = "https://github.com/aadegtyarev/python2wb"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 
-[project.urls]
-Homepage = "https://github.com/aadegtyarev/python2wb"
-Issues = "https://github.com/aadegtyarev/python2wb/issues"
+[tool.poetry.dependencies]
+python = "^3.8"
+paho-mqtt = "^1.6.1"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -263,11 +263,22 @@ class WbMqtt:
 
         self.client.loop_forever()
 
+    def loop_start(self):
+        """Запуск"""
+
+        self.client.loop_start()
+
+    def loop_stop(self):
+        """Останов"""
+
+        self.client.loop_stop()
+
     def clear(self):
         """Очистка виртуальных устройств, подписок и отключение клиента от брокера"""
 
         self.remove_all_virtual_devices()
         self.client.disconnect()
+        self.client.loop_stop()
 
     def _watch_control(self, client, userdata, msg):
         """Внутреннее. Слежение за контролами всех устройств, кроме создаваемых из этого модуля.

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python2wb"
-version = "0.1.7"
+version = "0.2.1"
 authors = ["Alexander Degtyarev <adegtyarev.ap@gmail.com>"]
 description = "Module for Python integration with Wiren Board MQTT"
 readme = "README.md"
